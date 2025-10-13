@@ -2,6 +2,7 @@
 #include "stm32f4xx.h"
 #include "main.h"
 
+uint32_t ticks;
 int main(void)
 {
     clock_setup();
@@ -12,21 +13,18 @@ int main(void)
     
     //set mode as output for pc13
     GPIOC->MODER |= GPIO_MODER_MODER13_0; 
+
+    SysTick_Config(100000);
+    __enable_irq();
     
     while (1)
     {
         //toggle pc13 on
         GPIOC->ODR |= GPIO_ODR_OD13; 
-        for(uint32_t i = 0; i<10000000; i++)
-        {
-            asm("nop");
-        }
+        delay_ms(1000);
         //toggle PC13 on
         GPIOC->ODR &= ~GPIO_ODR_OD13; 
-        for(uint32_t j = 0; j<10000000; j++)
-        {
-            asm("nop");
-        }
+        delay_ms(1000);
     }
     
 }
@@ -83,4 +81,22 @@ void clock_setup(void)
     RCC->CFGR |= RCC_CFGR_SW_PLL;
 
     SystemCoreClockUpdate(); //the and bitwise operation is broken?S
+}
+
+void SysTick_Handler()
+{
+    ticks++;
+}
+
+void delay_ms(uint32_t millisecs)
+{
+    uint32_t start = ticks;
+    uint32_t end = start + millisecs;
+
+    if (end < start)
+    {
+        while (ticks > start){asm("nop");} // wait for ticks to wrap around to zero
+    }
+
+    while (ticks < end){asm("nop");}
 }
