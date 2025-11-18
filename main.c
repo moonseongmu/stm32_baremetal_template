@@ -115,7 +115,7 @@ void clock_setup(void){
     //select pll as system clock
     RCC->CFGR |= RCC_CFGR_SW_PLL;
 
-    SystemCoreClockUpdate(); //the and bitwise operation is broken?S
+    SystemCoreClockUpdate();
 }
 
 void SysTick_Handler(){
