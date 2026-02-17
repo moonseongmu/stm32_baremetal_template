@@ -4,4 +4,5 @@
 
 void uart_init(uint32_t baud);
 void uart_write_char(char c);
+void uart_read_char(void);
 #endif
