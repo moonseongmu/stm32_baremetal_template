@@ -4,7 +4,7 @@
 #include <errno.h>
 #include "uart.h"
 
-#ifndef __clang_major__
+#ifndef __PICOLIBC_VERSION__
 #undef errno
 extern int errno;
 #endif
@@ -65,7 +65,7 @@ int _read(__attribute__((unused)) int file, __attribute__((unused)) char *ptr, _
   return 0;
 }
 
-#ifdef __clang_major__
+#ifdef __PICOLIBC_VERSION__
 void* _sbrk(int incr) {
   extern char __heap_start;
   extern char __heap_end;
