@@ -1,9 +1,13 @@
 #include <sys/stat.h>
 #include <sys/times.h>
+#include <stdio.h>
 #include <errno.h>
 #include "uart.h"
+
+#ifndef __clang_major__
 #undef errno
 extern int errno;
+#endif
 
 void _exit(__attribute__((unused)) int exit_code){
     while(1){}
@@ -61,6 +65,30 @@ int _read(__attribute__((unused)) int file, __attribute__((unused)) char *ptr, _
   return 0;
 }
 
+#ifdef __clang_major__
+void* _sbrk(int incr) {
+  extern char __heap_start;
+  extern char __heap_end;
+  static char* heap_pointer;
+  char* prev_heap_pointer;
+  char* heap_end;
+  heap_end =  &__heap_end;
+
+  if(heap_pointer ==0 ){
+    heap_pointer = &__heap_start;
+  }
+  prev_heap_pointer = heap_pointer;
+  if (heap_pointer+incr >= heap_end){
+    while(1){/*heap and stack collision*/}
+  }
+
+  heap_pointer += incr;
+  return (void*)prev_heap_pointer;
+
+}
+
+#else
+
 register char * stack_ptr asm("sp");
 void* _sbrk(int incr) {
   extern char __bss_end__;
@@ -81,6 +109,8 @@ void* _sbrk(int incr) {
   heap_end += incr;
   return (void*) prev_heap_end;
 }
+
+#endif
 
 int _stat(__attribute__((unused)) char *file, struct stat *st) {
   st->st_mode = S_IFCHR;
@@ -111,3 +141,25 @@ int _write(int file, char *ptr, int len) {
   
   return len;
 }
+
+#if defined(__PICOLIBC_VERSION__)
+
+int _putc(char c, FILE *file){
+	(void) file;		/* Not used in this function */
+	uart_write_char(c);		/* Defined by underlying system */
+	return c;
+}
+
+int _getc(FILE *file){
+  unsigned char c;
+	(void) file;		/* Not used in this function */
+	c = uart_read_char();		/* Defined by underlying system */
+	return c;
+}
+
+
+FILE __stdio = FDEV_SETUP_STREAM(_putc, _getc, NULL, _FDEV_SETUP_RW);
+FILE *const stdin = &__stdio;
+__strong_reference(stdin, stdout);
+__strong_reference(stdin, stderr);
+#endif

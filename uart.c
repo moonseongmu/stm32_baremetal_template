@@ -40,6 +40,6 @@ void uart_write_char(char c){
     USART1->DR = c;
 }
 
-void uart_read_char(void){
-    
+char uart_read_char(void){
+    return 0;
 }
