@@ -4,9 +4,6 @@
 #include "main.h"
 
 uint32_t ticks;
-uint32_t button_timestamp;
-uint32_t button_expiration = 30; //button blocking time in ms
-int button_pressed = 0;
 
 int main(void){
     clock_setup();
